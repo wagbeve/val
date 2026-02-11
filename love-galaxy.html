@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Galaxy of Love for You 💫</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            background: #000;
+            cursor: grab;
+        }
+
+        body:active {
+            cursor: grabbing;
+        }
+
+        /* Canvas for 3D scene */
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Welcome overlay */
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(147, 51, 234, 0.3), rgba(0, 0, 0, 0.95));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s ease;
+        }
+
+        .welcome-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .welcome-content {
+            text-align: center;
+            color: white;
+            max-width: 600px;
+            padding: 20px;
+            animation: fadeInScale 1.5s ease;
+        }
+
+        .welcome-content h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ec4899, #8b5cf6, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s infinite;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+        }
+
+        @keyframes shimmer {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.5); }
+        }
+
+        .welcome-content p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            line-height: 1.8;
+            color: #f0f0f0;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+        }
+
+        .start-button {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.3rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        .start-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(236, 72, 153, 0.8);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Letter modal */
+        .letter-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 240, 245, 0.95));
+            padding: 50px;
+            border-radius: 20px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 999;
+            box-shadow: 0 0 100px rgba(236, 72, 153, 0.6);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            opacity: 0;
+        }
+
+        .letter-modal.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .letter-modal h2 {
+            color: #d91b79;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .letter-modal p {
+            color: #1a1a1a;
+            font-size: 1.2rem;
+            line-height: 1.9;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ec4899;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-button:hover {
+            background: #db2777;
+            transform: rotate(90deg);
+        }
+
+        /* Instructions */
+        .instructions {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 2s ease 1s both;
+            border: 1px solid rgba(236, 72, 153, 0.5);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Message counter */
+        .counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            color: #ffffff;
+            background: rgba(236, 72, 153, 0.4);
+            padding: 15px 25px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(236, 72, 153, 0.6);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+
+        /* Scrollbar for modal */
+        .letter-modal::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .letter-modal::-webkit-scrollbar-track {
+            background: rgba(236, 72, 153, 0.1);
+            border-radius: 10px;
+        }
+
+        .letter-modal::-webkit-scrollbar-thumb {
+            background: #ec4899;
+            border-radius: 10px;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .welcome-content h1 {
+                font-size: 2rem;
+                line-height: 1.2;
+                filter: drop-shadow(2px 2px 6px rgba(0,0,0,0.8));
+            }
+            
+            .welcome-content p {
+                font-size: 1.1rem;
+                line-height: 1.7;
+                text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
+            }
+
+            .start-button {
+                font-size: 1.3rem;
+                padding: 18px 50px;
+            }
+
+            .letter-modal {
+                padding: 30px;
+                max-width: 90%;
+            }
+
+            .letter-modal h2 {
+                font-size: 1.8rem;
+            }
+
+            .letter-modal p {
+                font-size: 1.05rem;
+                line-height: 1.8;
+                font-weight: 500;
+            }
+
+            .instructions {
+                font-size: 0.95rem;
+                padding: 12px 20px;
+                background: rgba(0, 0, 0, 0.85);
+                border: 1px solid rgba(236, 72, 153, 0.4);
+            }
+
+            .counter {
+                font-size: 1rem;
+                padding: 10px 15px;
+            }
+
+            .close-button {
+                width: 45px;
+                height: 45px;
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-content">
+            <h1>✨ A Galaxy of Love ✨</h1>
+            <p>I've scattered love notes across a universe just for you. Each star holds a message from my heart. Explore, discover, and feel how much you mean to me.</p>
+            <button class="start-button" onclick="startExperience()">Enter Our Galaxy 💫</button>
+        </div>
+    </div>
+
+    <!-- Canvas for Three.js -->
+    <canvas id="canvas"></canvas>
+
+    <!-- Instructions -->
+    <div class="instructions">
+        🖱️ Drag to rotate • Click stars to read messages • Scroll to zoom
+    </div>
+
+    <!-- Counter -->
+    <div class="counter">
+        <span id="messageCount">0</span> / <span id="totalMessages">10</span> messages discovered
+    </div>
+
+    <!-- Letter modal -->
+    <div class="letter-modal" id="letterModal">
+        <button class="close-button" onclick="closeModal()">×</button>
+        <h2 id="modalTitle"></h2>
+        <div id="modalContent"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Love messages - CUSTOMIZE THESE!
+        const loveMessages = [
+            {
+                title: "The Day Everything Changed",
+                content: "From the moment I met you, I knew my life would never be the same. Your smile, your laugh, the way you see the world - everything about you captivates me. You are my favorite hello and my hardest goodbye."
+            },
+            {
+                title: "What I Love About You",
+                content: "I love how you make me laugh when I least expect it. I love your kindness, your strength, and the way you light up every room you enter. I love how you understand me without words and accept me completely."
+            },
+            {
+                title: "My Favorite Memory",
+                content: "Remember that time we stayed up all night just talking? The world fell away and it was just us. That's when I realized - I could spend forever with you and it still wouldn't be enough time."
+            },
+            {
+                title: "Why You're Amazing",
+                content: "You inspire me to be better every single day. Your passion, your dreams, your beautiful soul - they make me want to reach higher, love deeper, and appreciate every precious moment we have together."
+            },
+            {
+                title: "Our Future Together",
+                content: "When I think about the future, you're in every scene. Every dream, every plan, every adventure - I want to share it all with you. Together, we can conquer anything."
+            },
+            {
+                title: "The Little Things",
+                content: "It's the little things that mean the most. The way you hold my hand, your good morning texts, how you remember my favorite things. These small moments create our beautiful story."
+            },
+            {
+                title: "You Are My Home",
+                content: "Home isn't a place - it's you. Wherever you are, that's where I belong. In your arms, I've found peace. In your eyes, I've found my future. In your heart, I've found my home."
+            },
+            {
+                title: "Thank You",
+                content: "Thank you for choosing me, for loving me, for being patient with me. Thank you for being my partner, my best friend, and my greatest adventure. You are my greatest blessing."
+            },
+            {
+                title: "Forever Promise",
+                content: "I promise to always support your dreams, to make you laugh when you're sad, to hold you when you need comfort, and to love you with everything I have. Today, tomorrow, and always."
+            },
+            {
+                title: "Happy Valentine's Day! 💝",
+                content: "You are my sunshine on cloudy days, my strength when I'm weak, and my joy in every moment. I love you more than words can express, more than actions can show. You are everything to me. Happy Valentine's Day, my love! 💕"
+            }
+        ];
+
+        let scene, camera, renderer, particles = [], discovered = new Set();
+        let isDragging = false, previousMousePosition = { x: 0, y: 0 };
+        let rotationVelocity = { x: 0, y: 0 };
+
+        function startExperience() {
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('welcomeScreen').remove();
+            }, 1000);
+            init();
+            animate();
+        }
+
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.0008);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+            camera.position.z = 1000;
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Create stars background
+            const starGeometry = new THREE.BufferGeometry();
+            const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 2 });
+            const starVertices = [];
+            for (let i = 0; i < 10000; i++) {
+                const x = (Math.random() - 0.5) * 4000;
+                const y = (Math.random() - 0.5) * 4000;
+                const z = (Math.random() - 0.5) * 4000;
+                starVertices.push(x, y, z);
+            }
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+
+            // Create love letter particles
+            const colors = [0xff1493, 0xff69b4, 0xffc0cb, 0x9370db, 0x8a2be2, 0xff6ec7, 0xe066ff, 0xff1493, 0xff69b4, 0xffc0cb];
+            
+            for (let i = 0; i < loveMessages.length; i++) {
+                const geometry = new THREE.SphereGeometry(15, 32, 32);
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: colors[i],
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const particle = new THREE.Mesh(geometry, material);
+                
+                // Position particles in a beautiful spiral galaxy formation
+                const angle = i * (Math.PI * 2 / loveMessages.length);
+                const radius = 300 + Math.random() * 400;
+                const height = (Math.random() - 0.5) * 300;
+                
+                particle.position.x = Math.cos(angle) * radius;
+                particle.position.y = height;
+                particle.position.z = Math.sin(angle) * radius;
+                
+                particle.userData = { messageIndex: i, originalColor: colors[i] };
+                
+                // Add glow effect
+                const glowGeometry = new THREE.SphereGeometry(20, 32, 32);
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    color: colors[i],
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                particle.add(glow);
+                
+                scene.add(particle);
+                particles.push(particle);
+            }
+
+            // Mouse events
+            document.addEventListener('mousedown', onMouseDown);
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            document.addEventListener('click', onMouseClick);
+            document.addEventListener('wheel', onMouseWheel);
+
+            // Touch events for mobile
+            document.addEventListener('touchstart', onTouchStart);
+            document.addEventListener('touchmove', onTouchMove);
+            document.addEventListener('touchend', onTouchEnd);
+
+            window.addEventListener('resize', onWindowResize);
+
+            updateCounter();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate scene gently
+            if (!isDragging) {
+                scene.rotation.y += rotationVelocity.x;
+                scene.rotation.x += rotationVelocity.y;
+                rotationVelocity.x *= 0.95;
+                rotationVelocity.y *= 0.95;
+            }
+
+            // Animate particles
+            particles.forEach((particle, index) => {
+                particle.rotation.y += 0.01;
+                particle.position.y += Math.sin(Date.now() * 0.001 + index) * 0.5;
+                
+                // Pulse effect
+                const scale = 1 + Math.sin(Date.now() * 0.003 + index) * 0.1;
+                particle.scale.set(scale, scale, scale);
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        function onMouseDown(e) {
+            isDragging = true;
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        }
+
+        function onMouseMove(e) {
+            if (isDragging) {
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+
+                rotationVelocity.x = deltaX * 0.005;
+                rotationVelocity.y = deltaY * 0.005;
+
+                scene.rotation.y += rotationVelocity.x;
+                scene.rotation.x += rotationVelocity.y;
+
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            }
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+        }
+
+        function onMouseClick(e) {
+            if (isDragging) return;
+
+            const mouse = new THREE.Vector2(
+                (e.clientX / window.innerWidth) * 2 - 1,
+                -(e.clientY / window.innerHeight) * 2 + 1
+            );
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+
+            const intersects = raycaster.intersectObjects(particles);
+
+            if (intersects.length > 0) {
+                const particle = intersects[0].object;
+                const messageIndex = particle.userData.messageIndex;
+                showMessage(messageIndex);
+                
+                // Mark as discovered
+                if (!discovered.has(messageIndex)) {
+                    discovered.add(messageIndex);
+                    updateCounter();
+                    
+                    // Change color to indicate discovered
+                    particle.material.color.setHex(0xffd700);
+                }
+            }
+        }
+
+        function onMouseWheel(e) {
+            camera.position.z += e.deltaY * 0.5;
+            camera.position.z = Math.max(400, Math.min(2000, camera.position.z));
+        }
+
+        // Touch events
+        let touchStart = null;
+
+        function onTouchStart(e) {
+            if (e.touches.length === 1) {
+                touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                isDragging = true;
+            }
+        }
+
+        function onTouchMove(e) {
+            if (isDragging && touchStart) {
+                const deltaX = e.touches[0].clientX - touchStart.x;
+                const deltaY = e.touches[0].clientY - touchStart.y;
+
+                scene.rotation.y += deltaX * 0.005;
+                scene.rotation.x += deltaY * 0.005;
+
+                touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+        }
+
+        function onTouchEnd() {
+            isDragging = false;
+            touchStart = null;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function showMessage(index) {
+            const message = loveMessages[index];
+            document.getElementById('modalTitle').textContent = message.title;
+            document.getElementById('modalContent').innerHTML = `<p>${message.content}</p>`;
+            document.getElementById('letterModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('letterModal').classList.remove('active');
+        }
+
+        function updateCounter() {
+            document.getElementById('messageCount').textContent = discovered.size;
+            document.getElementById('totalMessages').textContent = loveMessages.length;
+        }
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
